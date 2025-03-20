@@ -288,8 +288,7 @@ setTimeout(() => {
       var NSlider;
       
       var hl = 0.2;
-
-      console.log("value of hl is ", hl)
+ 
   
       
 
@@ -951,7 +950,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
         // tube paths /////////////////////////////////////////////////////////////////////
 
         function createTube(tube, type, hl, color,topology) {
-           console.log('entering create tube')
+           
          
            
           var ind0 = Math.round(N / (2.0 * n));
@@ -972,9 +971,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
            };};
 
            if(type==2){
-
-
-            console.log('entered edge creation with n = ', n)
+ 
             
               var i = 1
               var ind =   2*ind0+1; // 2 * (i+2) * ind0 -2 * ind0 + 1;
@@ -983,8 +980,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
               var path = [];
                
               var v0  = [];
-              var v   = [];
-              console.log('entered edge creation with ind = ', ind)
+              var v   = []; 
 
            for (var t = 1; t <N+1;  t++) {
              //console.log(t)
@@ -1099,8 +1095,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
 
  
           if (showMid) {
-
-            console.log('entering show midlipath')
+ 
             meshDispose(tubeMid);
             meshDispose(golf);
             createTube(tubeMid, 1, hl, yellow,topology);

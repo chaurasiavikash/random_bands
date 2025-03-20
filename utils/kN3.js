@@ -61,7 +61,7 @@ var init_parameters = function(n,N, topology = -1) {
   // Verify dot product for pole-to-pole topology in generatrix
   if (topology === -1) {
     var dotProduct = hx0[0] * hx0[N] + hy0[0] * hy0[N] + hz0[0] * hz0[N];
-    console.log("First & last point dot product:", dotProduct);
+   // console.log("First & last point dot product:", dotProduct);
   }
 };
 
@@ -202,7 +202,7 @@ function directrix(n,N) {
   for (let i = 0; i < N; i++) {
     zSum += rz0[i];
   }
-  console.log("Z average (should be ~0):", zSum/N);
+  //console.log("Z average (should be ~0):", zSum/N);
 }
 // /**
 //  * Generates a random smooth curve on a unit sphere.
@@ -675,11 +675,11 @@ function generatrix(n, N, topology) {
       Math.abs(hz0[0] - hz0[N]) < 1e-10
     );
     
-    console.log("Curve closure verification:", isClosed ? "Success" : "Failed");
+  //  console.log("Curve closure verification:", isClosed ? "Success" : "Failed");
   } else if (topology === -1) {
     // Check if first and last points are opposite (dot product should be -1)
-    var dotProduct = hx0[0] * hx0[N] + hy0[0] * hy0[N] + hz0[0] * hz0[N];
-    console.log("Opposite poles verification: Dot product =", dotProduct, "(should be close to -1)");
+   // var dotProduct = hx0[0] * hx0[N] + hy0[0] * hy0[N] + hz0[0] * hz0[N];
+    //console.log("Opposite poles verification: Dot product =", dotProduct, "(should be close to -1)");
   }
 }
 
