@@ -52,7 +52,13 @@
 
   <div class='leftbar'>
 
+  
 
+    <button class='button' id='buttTopologyPlus' title='path traced by a point on the midline
+     of the band  during the everting motion'> orientable </button>
+     <button class='button' id='buttTopologyMinus' title='path traced by a point on the midline
+     of the band  during the everting motion'> nonorientable </button>
+     
     <g class="textElement">
     <text  > parameters </text>
     </g>
@@ -267,7 +273,7 @@ setTimeout(() => {
  
       var n = 3;
       var N = 200;
-      var n_min = 3;
+      var n_min = 2;
       var n_max = 30;
        
       // Ensure n is defined somewhere in your code. For example:
@@ -290,9 +296,16 @@ setTimeout(() => {
 
       /// initialize the mesh
       var n = 3;
-       var c = 1;
+       var c = 10;
       var t = 0;
-      animationData(n,N,0);
+      var N = 200;
+      
+
+      var topology =  -1;
+
+      init_parameters(n,N,topology);
+
+      animationData(t);
 
       ///////////////////////////////////////////////////
 
@@ -303,30 +316,112 @@ setTimeout(() => {
       }
 
       
+    // buttons start here 
+
+     /// n buttons
+      // change number of half twists ////////////////////////////////////////////////////
+
+      var orientable = false;
+      var nonorientable = false;
+
+      buttonSwitchColor(ebID('buttTopologyMinus'), !nonorientable);
+
+      ebID('buttTopologyPlus').addEventListener('click', function () {
+
+        orientable = true;
+        nonorientalbe = false;
+        buttonSwitchColor(ebID('buttTopologyPlus'), true);
+        buttonSwitchColor(ebID('buttTopologyMinus'), false);
+
+        // checking if number n of half twists is odd
+        if(n%2==1){
+          n=4;
+
+          ebID('infoNumOf_n').innerHTML = "n = " + n.toString();
+        }
+        
+        
+       
+        topology = 1;
+          
+
+        document.body.dispatchEvent(nChanged);
+       
+      });
+
+      ebID('buttTopologyMinus').addEventListener('click', function () {
+
+        nonorientable = true;
+        orientable = false;
+        buttonSwitchColor(ebID('buttTopologyMinus'),true);
+        buttonSwitchColor(ebID('buttTopologyPlus'), false);
+        
+        // checking if number n of half twists is even
+        if(n%2==0){
+          n=3;
+          ebID('infoNumOf_n').innerHTML = "n = " + n.toString();
+        }
+
+        topology = -1;
+  
+
+        document.body.dispatchEvent(nChanged);
+
+        });
+
 
       /// n buttons
-      // change number of half twists ////////////////////////////////////////////////////
-      ebID('buttNumOf_n_Minus').addEventListener('click', function () {
-        if (n > n_min) {
-          n = n - 1;
-          ebID('infoNumOf_n').innerHTML = "n = " + n.toString();
-          
+// change number of half twists ////////////////////////////////////////////////////
+ebID('buttNumOf_n_Minus').addEventListener('click', function () {
+  if (n > n_min+1) {
+    // Decrement based on topology
+    if (topology === 1) {
+      // For topology = 1, decrement by 2 (even numbers only)
+      n = n - 2;
+    } else if (topology === -1) {
+      // For topology = -1, ensure we stay on odd numbers
+      n = n - 2;
+      if (n % 2 === 0) { // If we landed on an even number
+        n = n - 1;       // Go one more to get an odd number
+      }
+    } else {
+      // Default behavior for other topology values
+      
+      n = n - 1;
+    }
+    
+    // Ensure we don't go below minimum
+    n = Math.max(n, n_min);
+    
+    ebID('infoNumOf_n').innerHTML = "n = " + n.toString();
+    document.body.dispatchEvent(nChanged);
+  }
+});
 
-          document.body.dispatchEvent(nChanged);
-        }
-      });
-      ebID('buttNumOf_n_Plus').addEventListener('click', function () {
-        if (n < n_max) {
-          n = n + 1;
-          // change the position of the energy slider 
-          ebID('infoNumOf_n').innerHTML = "n = " + n.toString();
-          
-          // update alpha slider 
-          
-
-          document.body.dispatchEvent(nChanged);
-        }
-      });
+ebID('buttNumOf_n_Plus').addEventListener('click', function () {
+  if (n < n_max) {
+    // Increment based on topology
+    if (topology === 1) {
+      // For topology = 1, increment by 2 (even numbers only)
+      n = n + 2;
+    } else if (topology === -1) {
+      // For topology = -1, ensure we stay on odd numbers
+      n = n + 2;
+      if (n % 2 === 0) { // If we landed on an even number
+        n = n + 1;       // Go one more to get an odd number
+      }
+    } else {
+      // Default behavior for other topology values
+      n = n + 1;
+    }
+    
+    // Ensure we don't exceed maximum
+    n = Math.min(n, n_max);
+    
+    ebID('infoNumOf_n').innerHTML = "n = " + n.toString();
+    document.body.dispatchEvent(nChanged);
+  }
+});
 
    
       ///////////////////////////////////////////////////
@@ -515,11 +610,16 @@ setTimeout(() => {
         var band = new BABYLON.Mesh('custom', scene);
         var bandBack = new BABYLON.Mesh('custom', scene);
 
+        function k_to_t(k) {
+          return Math.round(k * N / (2 * Math.PI));
+        };
+        var t;
 
-
-        function updateBandMesh(n,N,t, hingeLength) {
+        function updateBandMesh(n,N,k, hingeLength,topology) {
           
-          let temp = fourierExpansion(n,N, t, hingeLength);
+         t = k_to_t(k)
+
+          let temp = fourierExpansion(n,N, t, hingeLength,topology);
           var v = temp[0];
 
           // updating curvature 
@@ -543,7 +643,7 @@ setTimeout(() => {
           var colors = [];
           var colorsBack = [];
           
-          var sign_band = (-1)**n;
+          var sign_band = topology;
           for (var i = 1; i < N ; i++) {
             var v1 = [v[6 * i - 5], v[6 * i - 3], -v[6 * i - 4]];
             var v2 = [v[6 * i - 2], v[6 * i], -v[6 * i - 1]];
@@ -609,7 +709,7 @@ setTimeout(() => {
               colorsBack.push(1, 0, 0, 1);
             }
              
-            if(n%2==0){
+            if(topology==1){
              
             
               indices.push(2 * i-1, 2 * i + 1, 2 * i- 2 );
@@ -817,43 +917,27 @@ setTimeout(() => {
 
         // tube paths /////////////////////////////////////////////////////////////////////
 
-        function createTube(tube, type, hingeLength, color) {
-
-          if(N<22){
-                     
-           
-          for (var i = 1; i < N+1; i++) {
-            var ind =i;
-
-            var curve = paths(n,N, hingeLength, type, ind);
-            tube[i] = BABYLON.Mesh.CreateTube('tube', curve, 0.0025, 8, null, null, scene);
-            tube[i].material = color;
-            golf[i] = BABYLON.MeshBuilder.CreateIcoSphere(
-              'ico', { radius: 0.025, subdivisions: 8, flat: false, updatable: false }, scene);
-            golf[i].material = red;
-            updateBandMesh(n,N,k, hl);
-          }
-        }
-          
-          else{
-
+        function createTube(tube, type, hingeLength, color,topology) {
+           console.log('entering create tube')
+        
           
           var ind0 = Math.round(N / (2 * n));
           for (var i = 1; i < n + 1; i++) {
             var ind = 2 * i * ind0 - 2 * ind0 + 1;
 
-            var curve = paths(n,N, hingeLength, type, ind);
+            var curve = paths(n,N, hingeLength, type, ind, topology);
+
+            console.log(curve)
             tube[i] = BABYLON.Mesh.CreateTube('tube', curve, 0.0025, 8, null, null, scene);
             tube[i].material = color;
             golf[i] = BABYLON.MeshBuilder.CreateIcoSphere(
               'ico', { radius: 0.025, subdivisions: 8, flat: false, updatable: false }, scene);
             golf[i].material = red;
-            updateBandMesh(n,N,k, hl);
+            updateBandMesh(n,N,k, hl, topology);
 
           }
 
-
-          }
+ 
           // if (type == 2) { // midpoints get golf
           //   for (var i = 1; i < n + 1; ++i) {
           //     golf[i] = BABYLON.MeshBuilder.CreateIcoSphere(
@@ -915,19 +999,20 @@ setTimeout(() => {
         document.body.addEventListener('nChanged', function (e) {
           
            
-
           midline.dispose();
           meshDispose(rulings);
           midlineInit();
-
+          init_parameters(n,N, topology)
 
           if (showMid) {
+
+            console.log('entering show midlipath')
             meshDispose(tubeMid);
             meshDispose(golf);
-            createTube(tubeMid, 2, 0.5 * 3, yellow);
+            createTube(tubeMid, 2, 0.5 * 3, yellow,topology);
           }
 
-          updateBandMesh(n,N,k, hl);
+          updateBandMesh(n,N,k, hl, topology);
 
 
           refresh = true;
@@ -977,7 +1062,7 @@ setTimeout(() => {
             dot.setAttribute('cx', 40 * Math.sin(angle));
             dot.setAttribute('cy', -40 * Math.cos(angle));
             k = angle;
-            updateBandMesh(n,N,k, hl);
+            updateBandMesh(n,N,k, hl, topology);
             refresh = true;
           }
         }
@@ -991,7 +1076,7 @@ setTimeout(() => {
             dot.setAttribute('cx', 40 * Math.sin(angle));
             dot.setAttribute('cy', -40 * Math.cos(angle));
             k = angle;
-            updateBandMesh(n,N,k, hl);
+            updateBandMesh(n,N,k, hl, topology);
             refresh = true;
           }
         }
@@ -1033,7 +1118,7 @@ setTimeout(() => {
         var hingeLengthSlider = new Slider('hingeLengthSlider', 0, 50, hl * 100, '', 0, '%');
         ebID('hingeLengthSlider').addEventListener('sliderChange', function () {
           hl = hingeLengthSlider.getValue() / 100;
-          if (!play) updateBandMesh(n,N,k, hl);
+          if (!play) updateBandMesh(n,N,k, hl, topology);
 
           refresh = true;
 
@@ -1165,7 +1250,7 @@ setTimeout(() => {
         document.body.addEventListener('colorChanged', function (e) {
           buttonSwitchColor(ebID('buttColor' + previousColorScheme), false);
           buttonSwitchColor(ebID('buttColor' + colorScheme), true);
-          if (!play) updateBandMesh(n,N,k, hl);
+          if (!play) updateBandMesh(n,N,k, hl, topology);
           refresh = true;
         }, false);
 
@@ -1174,7 +1259,7 @@ setTimeout(() => {
         ebID('buttShowMid').addEventListener('click', function () {
           showMid = !showMid;
           buttonSwitchColor(ebID('buttShowMid'), showMid);
-          if (showMid) createTube(tubeMid, 1, 0.5 * 3, yellow);
+          if (showMid) createTube(tubeMid, 1, 0.5 * 3, yellow,topology);
           else {
             meshDispose(tubeMid);
             meshDispose(golf);
@@ -1196,7 +1281,7 @@ setTimeout(() => {
         //#############################################################
         scene.registerBeforeRender(function () {
           if (play || k == 0) {
-            updateBandMesh(n,N,k, hl);
+            updateBandMesh(n,N,k, hl, topology);
             // move clock hand
             var dot = ebID('clockHand');
             dot.setAttribute('cx', 40 * Math.sin(k));
@@ -1229,8 +1314,7 @@ setTimeout(() => {
         engine.runRenderLoop(customRender); //start main render loop
 
         //document.body.addEventListener('nuiChanged', function () { console.log("updated value of nu index is " +  parseInt(nuSlider.getValue()))});
-
-
+ 
 
 
 

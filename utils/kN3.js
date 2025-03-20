@@ -15,13 +15,6 @@ var avg = function (arr) {
    return arr.reduce((a, b) => a + b, 0) / arr.length;
 };
 
-var hx0 = [];
-var hy0 = [];
-var hz0 = [];
-
-var rx0 = [];
-var ry0 = [];
-var rz0 = [];
 
 
 var linspace = function (start, end, num) {
@@ -37,140 +30,690 @@ var linspace = function (start, end, num) {
 }
  
 
-var animationData = function (n,N,j) {
- 
-  let t = j ;
-   let c =1;
+var hx0;
+var hy0;
+var hz0;
+
+var rx0;
+var ry0;
+var rz0;
+
+
+var cen = [0, 0, 0];
+
+// Combined initialization function
+var init_parameters = function(n,N, topology = -1) {
+  // Initialize arrays with proper size
+  hx0 = new Array(N + 1);
+  hy0 = new Array(N + 1);
+  hz0 = new Array(N + 1);
   
-  let hx = [];
-  let hy = [];
-  let hz = [];
+  rx0 = new Array(N + 1);
+  ry0 = new Array(N + 1);
+  rz0 = new Array(N + 1);
 
-  let rx = [];
-  let ry = [];
-  let rz = [];
- 
+  // Generate both curves
+  directrix(n,N);
+  generatrix(n,N, topology);
   
-
-
-  kappa0 = Array(N + 1).fill(0);
- 
-const cosGamma =  n/2 - Math.sqrt(n*n-4)/2;
-const sinGamma =  Math.sqrt(1-cosGamma*cosGamma);
- 
-////////////////////////////////////////////////////////////////////////////
-
-// first calculating the rotation angle for rigid transformation such that the x coordinate of the midline at s = 0 is  0
-  s = i/N*Math.PI;
-  xi = 0*s-c*t;    // xi at s = 0
-
-  let cos2s = Math.cos(2*xi)
-  let sin2s = Math.sin(2*xi)
-  let cosns = Math.cos(n*xi)
-  let sinns = Math.sin(n*xi)
-
-  let cosn_m_s = Math.cos(2*(n-1)*xi)
-  let cosn_p_s = Math.cos(2*(n+1)*xi)
-
-  let sinn_m_s = Math.sin(2*(n-1)*xi)
-  let sinn_p_s = Math.sin(2*(n+1)*xi)
-   
-
-  let tempRx = sinGamma/2 * ((n-cosGamma)*sin2s - (1+cosGamma)*sinn_m_s/(2*n-2) + (1-cosGamma)*sinn_p_s/(2*n+2));
-  let tempRy = -sinGamma/2 * ((n-cosGamma)*cos2s + (1+cosGamma)*cosn_m_s/(2*n-2) + (1-cosGamma)*cosn_p_s/(2*n+2));
-   
-  let norm1 = Math.sqrt(tempRx*tempRx + tempRy*tempRy)
   
-  const cosths_0 = tempRy/norm1;  // cos and sin theta of the angle required for rotation 
-  const sinths_0 = tempRx/norm1;
+  
+  // Verify dot product for pole-to-pole topology in generatrix
+  if (topology === -1) {
+    var dotProduct = hx0[0] * hx0[N] + hy0[0] * hy0[N] + hz0[0] * hz0[N];
+    console.log("First & last point dot product:", dotProduct);
+  }
+};
+
+ 
+
+// Global variable declarations
+var hx0;
+var hy0;
+var hz0;
+
+var rx0;
+var ry0;
+var rz0;
+
+/**
+ * Generates the directrix curve (random 3D curve with XY midplane)
+ * @param {number} N - Number of segments (resulting in N+1 points)
+ */
+function directrix(n,N) {
+  // Hyperparameters for a smooth sinusoidal curve
+  var baseRadius = 1.0;        // Base radius for XY plane distribution
+  var numHarmonics = n;        // Number of harmonic components to use
+  var maxHarmonicNum = 7;      // Maximum harmonic number (higher = more oscillations)
+  var harmonicAmplitude = 0.15; // Maximum amplitude of harmonics
+  var zMaxHarmonics = n;       // Number of z-harmonics to use
+  var zMaxAmplitude = 0.5;     // Maximum amplitude for Z oscillation
+  var smoothingPasses = 3;     // Number of smoothing passes to apply
+  var smoothingStrength = 0.8; // Strength of each smoothing pass (0-1)
     
-
-
-
-for (let i = 0; i <= N; i++) {
-   
-  s = i/N*Math.PI;
-  xi = s-c*t;
-
-  const cos2s = Math.cos(2*xi)
-  const sin2s = Math.sin(2*xi)
-  const cosns = Math.cos(n*xi)
-  const sinns = Math.sin(n*xi)
-
-  const cosn_m_s = Math.cos(2*(n-1)*xi)
-  const cosn_p_s = Math.cos(2*(n+1)*xi)
-
-  const sinn_m_s = Math.sin(2*(n-1)*xi)
-  const sinn_p_s = Math.sin(2*(n+1)*xi)
-   
+  // Generate base points around a circle
+  for (var i = 0; i < N; i++) {
+    // Normalized position around the circle (0 to 1)
+    var t = i / N;
+    var angle = t * 2 * Math.PI;
+    
+    // Initialize with a perfect circle
+    rx0[i] = Math.cos(angle) * baseRadius;
+    ry0[i] = Math.sin(angle) * baseRadius;
+    rz0[i] = 0;
+  }
   
- 
-    let tempBx =  cos2s*cosns*cosGamma + sin2s*sinns; 
-    let tempBy =  sin2s*cosns*cosGamma - cos2s*sinns;  
-    hz[i] =  cosns*sinGamma;
-
-    let tempRx = sinGamma/2 * ((n-cosGamma)*sin2s - (1+cosGamma)*sinn_m_s/(2*n-2) + (1-cosGamma)*sinn_p_s/(2*n+2));
-    let tempRy = -sinGamma/2 * ((n-cosGamma)*cos2s + (1+cosGamma)*cosn_m_s/(2*n-2) + (1-cosGamma)*cosn_p_s/(2*n+2));
-    rz[i] = -1*cosns*sinns*sinGamma*sinGamma/n;
-
-    rx[i] = cosths_0 * tempRx - sinths_0 * tempRy;
-    ry[i] = sinths_0 * tempRx + cosths_0 * tempRy;
-
-    hx[i] = cosths_0 * tempBx - sinths_0 * tempBy;
-    hy[i] = sinths_0 * tempBx + cosths_0 * tempBy;
-
-
- 
-
-
-}
- 
-  // nomrlalizing the midline
+  // Add harmonic variations to XY plane (with phase shifts)
+  // This creates more interesting variations than randomness
+  for (var h = 1; h <= numHarmonics; h++) {
+    // Each harmonic has a random amplitude, frequency and phase
+    var harmonicNum = Math.floor(Math.random() * maxHarmonicNum) + 2; // 2 to maxHarmonicNum
+    var amplitude = (Math.random() * harmonicAmplitude) * (1 - (h / numHarmonics)); // Decreasing amplitude
+    var phaseX = Math.random() * 2 * Math.PI;
+    var phaseY = Math.random() * 2 * Math.PI;
+    
+    for (var i = 0; i < N; i++) {
+      var t = i / N;
+      var angle = t * 2 * Math.PI;
+      
+      rx0[i] += Math.cos(harmonicNum * angle + phaseX) * amplitude;
+      ry0[i] += Math.sin(harmonicNum * angle + phaseY) * amplitude;
+    }
+  }
+  
+  // Add sinusoidal variations to Z coordinate (ensuring XY midplane)
+  for (var h = 1; h <= zMaxHarmonics; h++) {
+    var harmonicNum = h * 2 - 1; // Use odd harmonics: 1, 3, 5, 7...
+    var amplitude = zMaxAmplitude * (1 - (h / zMaxHarmonics)); // Decreasing amplitude
+    var phaseZ = Math.random() * 2 * Math.PI;
+    
+    for (var i = 0; i < N; i++) {
+      var t = i / N;
+      var angle = t * 2 * Math.PI;
+      
+      rz0[i] += Math.sin(harmonicNum * angle + phaseZ) * amplitude;
+    }
+  }
+  
+  // Make the curve closed by connecting back to the first point
+  rx0[N] = rx0[0];
+  ry0[N] = ry0[0];
+  rz0[N] = rz0[0];
+  
+  // Apply multiple smoothing passes
+  for (var pass = 0; pass < smoothingPasses; pass++) {
+    var rx_temp = rx0.slice();
+    var ry_temp = ry0.slice();
+    var rz_temp = rz0.slice();
+    
+    for (var i = 1; i < N; i++) {
+      rx0[i] = rx_temp[i] * (1 - smoothingStrength) + 
+               (rx_temp[i-1] + rx_temp[(i+1) % N]) * smoothingStrength/2;
+      ry0[i] = ry_temp[i] * (1 - smoothingStrength) + 
+               (ry_temp[i-1] + ry_temp[(i+1) % N]) * smoothingStrength/2;
+      rz0[i] = rz_temp[i] * (1 - smoothingStrength) + 
+               (rz_temp[i-1] + rz_temp[(i+1) % N]) * smoothingStrength/2;
+    }
+    
+    // Ensure closure after each smoothing pass
+    rx0[N] = rx0[0];
+    ry0[N] = ry0[0];
+    rz0[N] = rz0[0];
+  }
+  
+  // Helper function to calculate average of an array
+  function avg(arr) {
+    var sum = 0;
+    for (var i = 0; i < N; i++) {
+      sum += arr[i];
+    }
+    return sum / N;
+  }
+  
+  // Center the curve at origin (ensure XY is the midplane)
+  var cenX = avg(rx0);
+  var cenY = avg(ry0);
+  var cenZ = avg(rz0);
+  
+  for (var i = 0; i < N + 1; i++) {
+    rx0[i] = rx0[i] - cenX;
+    ry0[i] = ry0[i] - cenY;
+    rz0[i] = rz0[i] - cenZ;
+  }
+  
+  // Normalize the curve length
   let dl = 0;
   for (let i = 0; i < N; i++) {
-    let dx = rx[i + 1] - rx[i];
-    let dy = ry[i + 1] - ry[i];
-    let dz = rz[i + 1] - rz[i];
+    let dx = rx0[i + 1] - rx0[i];
+    let dy = ry0[i + 1] - ry0[i];
+    let dz = rz0[i + 1] - rz0[i];
     dl += Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
   dl = dl / 6;
+  
   for (let i = 0; i <= N; i++) {
-    rx[i] /= dl;
-    ry[i] /= dl;
-    rz[i] /= dl;
+    rx0[i] /= dl;
+    ry0[i] /= dl;
+    rz0[i] /= dl;
+  }
+  
+  // Verify that Z has zero mean (XY is midplane)
+  let zSum = 0;
+  for (let i = 0; i < N; i++) {
+    zSum += rz0[i];
+  }
+  console.log("Z average (should be ~0):", zSum/N);
+}
+/**
+ * Generates a random smooth curve on a unit sphere.
+ * @param {number} N - Number of points in the curve
+ * @param {number} topology - 1 for closed loop, -1 for curve between opposite poles
+ */
+function generatrix(n,N, topology) {
+  // Hyperparameters
+  var numThetaHarmonics = n;     // Number of harmonics for theta angle
+  var numPhiHarmonics = n;       // Number of harmonics for phi angle
+  var thetaAmplitude = 0.3;      // Base amplitude for theta variations
+  var phiAmplitude = 0.4;        // Base amplitude for phi variations
+  var smoothingPasses = 3;       // Number of smoothing iterations
+  var smoothingStrength = 0.4;   // Strength of each smoothing pass (0-1)
+  var seed = Math.random() * 10000; // Seed for pseudo-random generation
+  
+  // Seeded random function for reproducibility
+  function seededRandom() {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  }
+  
+  // Convert spherical coordinates to Cartesian coordinates
+  function sphericalToCartesian(theta, phi) {
+    var sinPhi = Math.sin(phi);
+    return [
+      sinPhi * Math.cos(theta),  // x
+      sinPhi * Math.sin(theta),  // y
+      Math.cos(phi)              // z
+    ];
+  }
+  
+  // Function to normalize a point to the unit sphere
+  function normalizeToSphere(x, y, z) {
+    var length = Math.sqrt(x*x + y*y + z*z);
+    return [x/length, y/length, z/length];
+  }
+  
+  // Generate random harmonics
+  var thetaHarmonics = [];
+  var phiHarmonics = [];
+  
+  for (var h = 0; h < numThetaHarmonics; h++) {
+    // Generate random parameters for theta variation
+    var harmonicNum, amplitude, phase;
+    
+    if (topology === 1) {
+      // For closed curves, use integer harmonics for 2π periodicity
+      harmonicNum = h + 1;  // 1, 2, 3...
+      amplitude = thetaAmplitude * Math.pow(0.7, h); // Decreasing amplitude
+      phase = seededRandom() * 2 * Math.PI;
+    } else {
+      // For pole-to-pole curves, avoid theta variations at poles
+      harmonicNum = h * 2 + 1;  // 1, 3, 5... (odd harmonics)
+      amplitude = thetaAmplitude * Math.pow(0.7, h); // Decreasing amplitude
+      phase = seededRandom() * 2 * Math.PI;
+    }
+    
+    thetaHarmonics.push({
+      number: harmonicNum,
+      amplitude: amplitude,
+      phase: phase
+    });
+  }
+  
+  for (var h = 0; h < numPhiHarmonics; h++) {
+    // Generate random parameters for phi variation
+    var harmonicNum, amplitude, phase;
+    
+    if (topology === 1) {
+      // For closed curves, use harmonics that create 2π periodicity
+      harmonicNum = h + 1;  // 1, 2, 3...
+      amplitude = phiAmplitude * Math.pow(0.6, h); // Decreasing amplitude
+      phase = seededRandom() * 2 * Math.PI;
+    } else {
+      // For pole-to-pole curves, use odd harmonics to preserve endpoints
+      harmonicNum = h * 2 + 1;  // 1, 3, 5... (odd harmonics)
+      amplitude = phiAmplitude * Math.pow(0.6, h) * 0.8; // Slightly lower amplitude
+      phase = seededRandom() * 2 * Math.PI;
+    }
+    
+    phiHarmonics.push({
+      number: harmonicNum,
+      amplitude: amplitude,
+      phase: phase
+    });
+  }
+  
+  // Generate base curve based on topology
+  if (topology === 1) {
+    // CLOSED CURVE (topology = 1)
+    
+    // Generate a random axis for the base circle orientation
+    var axis = normalizeToSphere(
+      seededRandom() * 2 - 1,
+      seededRandom() * 2 - 1,
+      seededRandom() * 2 - 1
+    );
+    
+    // Set up a basis for spherical coordinates
+    // The "pole" of our spherical coordinates will be in this random direction
+    // This gives us a random orientation for the base circle
+    var phi0 = Math.acos(axis[2]);
+    var theta0 = Math.atan2(axis[1], axis[0]);
+    
+    // Generate points
+    for (var i = 0; i <= N; i++) {
+      // Arc length parameter s in [0,1]
+      var s = i / N;
+      
+      // Base angles (circular path)
+      var theta = s * 2 * Math.PI;
+      var phi = Math.PI / 2; // Equator
+      
+      // Apply harmonic variations to theta (longitude)
+      for (var h = 0; h < thetaHarmonics.length; h++) {
+        var harmonic = thetaHarmonics[h];
+        theta += harmonic.amplitude * Math.sin(harmonic.number * theta + harmonic.phase);
+      }
+      
+      // Apply harmonic variations to phi (latitude)
+      for (var h = 0; h < phiHarmonics.length; h++) {
+        var harmonic = phiHarmonics[h];
+        phi += harmonic.amplitude * Math.sin(harmonic.number * theta + harmonic.phase);
+      }
+      
+      // Clamp phi to avoid numerical issues near poles
+      phi = Math.max(0.01, Math.min(Math.PI - 0.01, phi));
+      
+      // Convert to Cartesian coordinates
+      var point = sphericalToCartesian(theta, phi);
+      
+      // Rotate the resulting point to align with our random axis
+      // (This is a simplified rotation that works well enough for our purposes)
+      var rotatedPoint = [
+        point[0] * Math.cos(theta0) - point[1] * Math.sin(theta0),
+        point[0] * Math.sin(theta0) + point[1] * Math.cos(theta0),
+        point[2]
+      ];
+      
+      // This is not a perfect rotation but gives good enough randomization
+      // for the curve orientation
+      
+      // Store the point
+      [hx0[i], hy0[i], hz0[i]] = normalizeToSphere(...rotatedPoint);
+    }
+    
+    // Ensure exact closure
+    hx0[N] = hx0[0];
+    hy0[N] = hy0[0];
+    hz0[N] = hz0[0];
+    
+  } else if (topology === -1) {
+    // POLE-TO-POLE CURVE (topology = -1)
+    
+    // Generate random poles
+    var pole1 = normalizeToSphere(
+      seededRandom() * 2 - 1,
+      seededRandom() * 2 - 1,
+      seededRandom() * 2 - 1
+    );
+    var pole2 = [-pole1[0], -pole1[1], -pole1[2]]; // Exact opposite
+    
+    // Set endpoints
+    hx0[0] = pole1[0];
+    hy0[0] = pole1[1];
+    hz0[0] = pole1[2];
+    
+    hx0[N] = pole2[0];
+    hy0[N] = pole2[1];
+    hz0[N] = pole2[2];
+    
+    // Calculate the pole axis phi and theta
+    var polePhi = Math.acos(pole1[2]);
+    var poleTheta = Math.atan2(pole1[1], pole1[0]);
+    
+    // Generate intermediate points
+    for (var i = 1; i < N; i++) {
+      // Arc length parameter s in [0,1]
+      var s = i / N;
+      
+      // Base phi varies from pole to pole (0 to π)
+      var basePhi = s * Math.PI;
+      
+      // Base theta is constant (great circle path)
+      var baseTheta = poleTheta;
+      
+      // For pole-to-pole curves, we need phi variations that preserve the endpoints
+      // and theta variations that diminish at the poles
+      
+      // Theta variations (diminish at poles using sin(phi) factor)
+      var theta = baseTheta;
+      var phiFactor = Math.sin(basePhi); // Zero at poles, maximum at equator
+      
+      for (var h = 0; h < thetaHarmonics.length; h++) {
+        var harmonic = thetaHarmonics[h];
+        // Use sin(n*π*s) to ensure zero displacement at endpoints
+        theta += harmonic.amplitude * 
+                Math.sin(harmonic.number * Math.PI * s) * 
+                Math.sin(harmonic.phase + 2 * Math.PI * s) * 
+                phiFactor; // Scale by phiFactor to diminish at poles
+      }
+      
+      // Phi variations (using odd harmonics to preserve endpoints)
+      var phi = basePhi;
+      
+      for (var h = 0; h < phiHarmonics.length; h++) {
+        var harmonic = phiHarmonics[h];
+        // Use sin(n*π*s) to ensure zero at endpoints (poles)
+        phi += harmonic.amplitude * 
+               Math.sin(harmonic.number * Math.PI * s) * 
+               Math.sin(harmonic.phase + 2 * Math.PI * s);
+      }
+      
+      // Clamp phi to avoid numerical issues
+      phi = Math.max(0.01, Math.min(Math.PI - 0.01, phi));
+      
+      // Convert to Cartesian
+      var point = sphericalToCartesian(theta, phi);
+      
+      // Store the point
+      [hx0[i], hy0[i], hz0[i]] = normalizeToSphere(...point);
+    }
+  } else {
+    throw new Error("Topology must be either 1 (closed) or -1 (opposite poles)");
+  }
+  
+  // Apply smoothing passes while keeping points on sphere
+  for (var pass = 0; pass < smoothingPasses; pass++) {
+    var hx_temp = hx0.slice();
+    var hy_temp = hy0.slice();
+    var hz_temp = hz0.slice();
+    
+    // Skip endpoints for pole-to-pole topology
+    var startIdx = (topology === -1) ? 1 : 0;
+    var endIdx = (topology === -1) ? N - 1 : N;
+    
+    for (var i = startIdx; i <= endIdx; i++) {
+      // For closed curve, wrap around
+      var prevIdx = (i - 1 + N) % N;
+      var nextIdx = (i + 1) % N;
+      
+      // For pole-to-pole curve, don't wrap
+      if (topology === -1) {
+        prevIdx = Math.max(0, i - 1);
+        nextIdx = Math.min(N, i + 1);
+      }
+      
+      // Weighted average of current point and neighbors
+      var weight = smoothingStrength;
+      var newX = hx_temp[i] * (1 - weight) + (hx_temp[prevIdx] + hx_temp[nextIdx]) * weight / 2;
+      var newY = hy_temp[i] * (1 - weight) + (hy_temp[prevIdx] + hy_temp[nextIdx]) * weight / 2;
+      var newZ = hz_temp[i] * (1 - weight) + (hz_temp[prevIdx] + hz_temp[nextIdx]) * weight / 2;
+      
+      // Project back to sphere
+      [hx0[i], hy0[i], hz0[i]] = normalizeToSphere(newX, newY, newZ);
+    }
+    
+    // For closed curve, ensure closure after smoothing
+    if (topology === 1) {
+      hx0[N] = hx0[0];
+      hy0[N] = hy0[0];
+      hz0[N] = hz0[0];
+    }
+  }
+  
+  // Verify the topological constraints
+  if (topology === 1) {
+    // Check if first and last points are the same (closed curve)
+    var isClosed = (
+      Math.abs(hx0[0] - hx0[N]) < 1e-10 && 
+      Math.abs(hy0[0] - hy0[N]) < 1e-10 && 
+      Math.abs(hz0[0] - hz0[N]) < 1e-10
+    );
+    
+    console.log("Curve closure verification:", isClosed ? "Success" : "Failed");
+  } else if (topology === -1) {
+    // Check if first and last points are opposite (dot product should be -1)
+    var dotProduct = hx0[0] * hx0[N] + hy0[0] * hy0[N] + hz0[0] * hz0[N];
+    console.log("Opposite poles verification: Dot product =", dotProduct, "(should be close to -1)");
+  }
+}
+
+
+//the function below generates animation data 
+var animationData = function(j, N, topology) {
+  let ind = j % (2*N); // ensuring that index is not out of bound
+  let ind2 = j % (N); // ensuring that index is not out of bound
+   if (ind == 0) {
+     ind = 1;
   }
 
  
-  return [hx,hy,hz,rx,ry,rz]; 
-};
 
-//  midline and binormal loaded from the saved file 
+
+
+  let or = topology;
+  
+  if(ind<N+1){
  
+  let ar1 = Array.from(hx0.slice(ind - 1, N));
+  let ar2 = Array.from(hx0.slice(0, ind).map((x) => or * x));
+  
+  var hx = ar1.concat(ar2);
+
+  ar1 = Array.from(hy0.slice(ind - 1, N ));
+  ar2 = Array.from(hy0.slice(0, ind).map((x) => or * x));
+  var hy = ar1.concat(ar2);
+
+  ar1 = Array.from(hz0.slice(ind - 1, N));
+  ar2 = Array.from(hz0.slice(0, ind).map((x) => or * x));
+  var hz = ar1.concat(ar2);
+
+  ar1 = Array.from(kappa0.slice(ind - 1, N ));
+  ar2 = Array.from(kappa0.slice(0, ind).map((x) => or * x));
+  var kappa = ar1.concat(ar2);
+
+  // updated binormal 
+   ar1 = Array.from(rx0.slice(ind - 1, N));
+   ar2 = Array.from(rx0.slice(0, ind).map((x) => 1 * x));
+  
+   var rx = ar1.concat(ar2);
+
+
+
+   ar1 = Array.from(ry0.slice(ind - 1, N));
+   ar2 = Array.from(ry0.slice(0, ind).map((x) => 1 * x));
+  
+   var ry = ar1.concat(ar2);
+
+   ar1 = Array.from(rz0.slice(ind - 1, N));
+   ar2 = Array.from(rz0.slice(0, ind).map((x) => 1 * x));
+  
+   var rz = ar1.concat(ar2);
+   
+    
+  }
+  else {
+  let ar1 = Array.from(hx0.slice(ind2-1, N).map((x) => or * x));
+  let ar2 = Array.from(hx0.slice(0, ind2));
+
+  var hx = ar1.concat(ar2);
+
+   ar1 = Array.from(hy0.slice(ind2-1, N).map((x) => or * x));
+   ar2 = Array.from(hy0.slice(0, ind2));
+
+  var hy = ar1.concat(ar2);
+
+   ar1 = Array.from(hz0.slice(ind2-1, N).map((x) => or * x));
+   ar2 = Array.from(hz0.slice(0, ind2));
+
+  var hz = ar1.concat(ar2);
+
+  ar1 = Array.from(kappa0.slice(ind2-1, N).map((x) => or * x));
+   ar2 = Array.from(kappa0.slice(0, ind2));
+
+  var kappa = ar1.concat(ar2);
+
+  // updated binormal 
+   ar1 = Array.from(rx0.slice(ind2-1, N) );
+   ar2 = Array.from(rx0.slice(0, ind2));
+
+  var rx = ar1.concat(ar2);
+
+   ar1 = Array.from(ry0.slice(ind2-1, N) );
+   ar2 = Array.from(ry0.slice(0, ind2));
+
+  var ry = ar1.concat(ar2);
+
+   ar1 = Array.from(rz0.slice(ind2-1, N) );
+   ar2 = Array.from(rz0.slice(0, ind2));
+
+  var rz = ar1.concat(ar2);
+ 
+  };
+
+  
+   // ensuring that centroid is at the origin 
+  cen[0] = avg(rx);
+  cen[1] = avg(ry);
+  cen[2] = avg(rz);
+
+
+  for (var i = 0; i < N + 1; i++) {
+    rx[i] = rx[i] - cen[0];
+    ry[i] = ry[i] - cen[1];
+    rz[i] = rz[i] - cen[2];
+  }
+   /// rotating appropriately 
+   
+   // first rotating the hand such that index 0 is fixed
+   
+  let th =  -Math.acos(rx[0] / Math.sqrt(rx[0]*rx[0] + ry[0]*ry[0]));
+   // angle hetween point at s==0 and x axis
+   if (ry[0] < 0) {
+    th = 2 * Math.PI - th;
+  }
+  
+  if (ry[0] == 0 && rx[0] > 0) {
+    th = 0;
+  } else if (ry[0] == 0 && rx[0] < 0) {
+    th = Math.PI;
+  }
+  //th = 0;
+  let ux = 0, uy = 0, uz = 1;
+  
+  
+  let R1u = [
+    [
+      Math.cos(th) + ux ** 2 * (1 - Math.cos(th)),
+      ux * uy * (1 - Math.cos(th)) - uz * Math.sin(th),
+      ux * uz * (1 - Math.cos(th)) + uy * Math.sin(th),
+    ],
+    [
+      ux * uy * (1 - Math.cos(th)) + uz * Math.sin(th),
+      Math.cos(th) + uy ** 2 * (1 - Math.cos(th)),
+      uy * uz * (1 - Math.cos(th)) - ux * Math.sin(th),
+    ],
+    [
+      ux * uz * (1 - Math.cos(th)) - uy * Math.sin(th),
+      uy * uz * (1 - Math.cos(th)) + ux * Math.sin(th),
+      Math.cos(th) + uz ** 2 * (1 - Math.cos(th)),
+    ],
+  ];
+    for (let i = 0; i <  N+1; i++) {
+     
+     let temp = [];
+     temp[0] = R1u[0][0]*hx[i] + R1u[0][1]*hy[i] + R1u[0][2]*hz[i];
+     temp[1] = R1u[1][0]*hx[i] + R1u[1][1]*hy[i] + R1u[1][2]*hz[i];
+     temp[2] = R1u[2][0]*hx[i] + R1u[2][1]*hy[i] + R1u[2][2]*hz[i];
+     
+    
+    hx[i] = temp[0];
+    hy[i] = temp[1];
+    hz[i] = temp[2];
+
+
+ 
+     temp[0] = R1u[0][0]*rx[i] + R1u[0][1]*ry[i] + R1u[0][2]*rz[i];
+     temp[1] = R1u[1][0]*rx[i] + R1u[1][1]*ry[i] + R1u[1][2]*rz[i];
+     temp[2] = R1u[2][0]*rx[i] + R1u[2][1]*ry[i] + R1u[2][2]*rz[i];
+
+    rx[i] = temp[0];
+    ry[i] = temp[1];
+    rz[i] = temp[2];
+     
+ 
+ 
+  };
+  
+
+
+ 
+  //console.log(rx ); // returns true if any element is NaN
+  //console.log(rx.some(Number.isNaN)); // returns true if any element is NaN
+  
+   
+
+  // cen[0] = avg(rx);
+  // cen[1] = avg(ry);
+  // cen[2] = avg(rz);
+  
+  // console.log(rx[240])
+  //   console.log(rx.some(Number.isNaN));
+  // for (var i = 0; i < N + 1; i++) {
+  //   rx[i] = rx[i] - cen[0];
+  //   ry[i] = ry[i] - cen[1];
+  //   rz[i] = rz[i] - cen[2];
+  // }
+
+    
+ 
+   
+  return [hx,hy,hz,rx,ry,rz,kappa];
+  // rotating appropriately
+}
+// matrix multiplication
 
  
  
+var hx = [];
+var hy = [];
+var hz = [];
+
+var rx = [];
+var ry = [];
+var rz = [];
 var kappa = [];
 
-var fourierExpansion = function (n,N, t, hl) {
+var fourierExpansion = function (n,N, t, hl, topology) {
 
    l = (hl * 1.7) / 2;
    var v = [];
   
 
-  const result = animationData(n,N,t);
-   let hx = result[0];
-   let hy = result[1];
-   let hz = result[2];
+  const result = animationData(t,N, topology);
+   hx = result[0];
+   hy = result[1];
+   hz = result[2];
   
-   let rx = result[3];
-   let ry = result[4];
-   let rz = result[5];
+   rx = result[3];
+   ry = result[4];
+   rz = result[5];
 
    
 
    kappa = result[6];
   
-   let cen  =  [0,0,0];
+   cen[0] = avg(rx);
+   cen[1] = avg(ry);
+   cen[2] = avg(rz);
  
   var mid = [0, 0, 0];
 
@@ -179,7 +722,8 @@ var fourierExpansion = function (n,N, t, hl) {
   
 
   for (var i = 1; i < N +1; i++) {
- 
+    
+
     mid[0] = rx[i];
     mid[1] = ry[i];
     mid[2] = rz[i];
@@ -199,54 +743,26 @@ var fourierExpansion = function (n,N, t, hl) {
       }
     };
   };
-
-  // printing the edge length s
-  i = 1;
-
-  let x1 = rx[i]- hx[i] * l;
-  let y1 = ry[i]- hy[i] * l;
-  let z1 = rz[i]- hz[i] * l;
-  let x2 = rx[i]+ hx[i] * l;
-  let y2 = ry[i]+ hy[i] * l;
-  let z2 = rz[i]+ hz[i] * l; 
-   i = 2;
-
-  let x3 = rx[i]- hx[i] * l;
-  let y3 = ry[i]- hy[i] * l;
-  let z3 = rz[i]- hz[i] * l;
-  let x4 = rx[i]+ hx[i] * l;
-  let y4 = ry[i]+ hy[i] * l;
-  let z4 = rz[i]+ hz[i] * l; 
-
-  let len13 = Math.sqrt((x1-x3)**2 + (y1-y3)**2 + (z1-z3)**2);
-  let len23 = Math.sqrt((x2-x3)**2 + (y2-y3)**2 + (z2-z3)**2);
-  let len14 = Math.sqrt((x1-x4)**2 + (y1-y4)**2 + (z1-z4)**2);
-  let len24 = Math.sqrt((x2-x4)**2 + (y2-y4)**2 + (z2-z4)**2);
-   
-  //console.log(len13,len23,len14,len24);
-  //console.log( len23+len14);
-
-  let rlen12 = Math.sqrt((rx[0]-rx[1])**2 +  (ry[0]-ry[1])**2 + (rz[0]-rz[1])**2 );
-   
-  console.log(rlen12);
-
-
-
-  
-
- 
-  return [v, rx];
+  // tests
+  // console.log(Math.abs(hx[n]*hx[1]+hy[n]*hy[1]+hz[n]*hz[1]+0.925450349781138));
+  // tmp = [ hy[n]*hz[1] - hy[1]*hz[n],
+  //         hz[n]*hx[1] - hz[1]*hx[n],
+  //         hx[n]*hy[1] - hx[1]*hy[n] ];
+  // for (var j = 0; j < 3; j++) mid[j] -= tmp[j];
+  // console.log([mid[0],mid[1],mid[2]])
+  return [v,hx];
 };
 
-var paths = function (n,N, hl, selector,ind) {
+
+var paths = function (n,N, hl, selector,ind,topology) {
  
   var path = [];
   var v0  = [];
   var v   = [];
-  let M = 400;   // number of time steps 
+  let M =N;   // number of time steps 
   for (var i = 0; i<M+1; i++) {
-     let t = i/M*2*Pi;
-      v0 = fourierExpansion(n,N, t, hl)[0];
+     let t = i;
+      v0 = fourierExpansion(n,N, t, hl,topology)[0];
      v[1] = v0[6 * ind - 5]; 
     v[2] = v0[6 * ind - 4]; 
     v[3] = v0[6 * ind - 3]; 
