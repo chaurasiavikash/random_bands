@@ -303,10 +303,13 @@ setTimeout(() => {
 
       var topology =  -1;
 
+      var showMid = false;
       init_parameters(n,N,topology);
-
+      
+       
       animationData(t);
-
+      
+      
       ///////////////////////////////////////////////////
 
       //////// event listeners for the parameters ///////
@@ -335,7 +338,7 @@ setTimeout(() => {
 
         // checking if number n of half twists is odd
         if(n%2==1){
-          n=4;
+          n=2;
 
           ebID('infoNumOf_n').innerHTML = "n = " + n.toString();
         }
@@ -987,7 +990,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
 
         // show corner/midpoint paths /////////////////////////////////////////////////////
 
-        var showMid = false;
+        
 
 
 
@@ -995,6 +998,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
 
         /////////////////////////n  changed////////////////////////////
 
+      
 
         document.body.addEventListener('nChanged', function (e) {
           
@@ -1004,6 +1008,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
           midlineInit();
           init_parameters(n,N, topology)
 
+ 
           if (showMid) {
 
             console.log('entering show midlipath')
@@ -1256,6 +1261,17 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
 
 
         var tubeMid = [];
+
+        
+        showMid = !showMid;
+          buttonSwitchColor(ebID('buttShowMid'), showMid);
+          if (showMid) createTube(tubeMid, 1, 0.5 * 3, yellow,topology);
+          else {
+            meshDispose(tubeMid);
+            meshDispose(golf);
+          }
+          refresh = true
+
         ebID('buttShowMid').addEventListener('click', function () {
           showMid = !showMid;
           buttonSwitchColor(ebID('buttShowMid'), showMid);

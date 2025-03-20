@@ -204,17 +204,302 @@ function directrix(n,N) {
   }
   console.log("Z average (should be ~0):", zSum/N);
 }
+// /**
+//  * Generates a random smooth curve on a unit sphere.
+//  * @param {number} N - Number of points in the curve
+//  * @param {number} topology - 1 for closed loop, -1 for curve between opposite poles
+//  */
+// function generatrix(n,N, topology) {
+//   // Hyperparameters
+//   var numThetaHarmonics = n;     // Number of harmonics for theta angle
+//   var numPhiHarmonics = n;       // Number of harmonics for phi angle
+//   var thetaAmplitude = 0.3;      // Base amplitude for theta variations
+//   var phiAmplitude = 0.4;        // Base amplitude for phi variations
+//   var smoothingPasses = 3;       // Number of smoothing iterations
+//   var smoothingStrength = 0.4;   // Strength of each smoothing pass (0-1)
+//   var seed = Math.random() * 10000; // Seed for pseudo-random generation
+  
+//   // Seeded random function for reproducibility
+//   function seededRandom() {
+//     seed = (seed * 9301 + 49297) % 233280;
+//     return seed / 233280;
+//   }
+  
+//   // Convert spherical coordinates to Cartesian coordinates
+//   function sphericalToCartesian(theta, phi) {
+//     var sinPhi = Math.sin(phi);
+//     return [
+//       sinPhi * Math.cos(theta),  // x
+//       sinPhi * Math.sin(theta),  // y
+//       Math.cos(phi)              // z
+//     ];
+//   }
+  
+//   // Function to normalize a point to the unit sphere
+//   function normalizeToSphere(x, y, z) {
+//     var length = Math.sqrt(x*x + y*y + z*z);
+//     return [x/length, y/length, z/length];
+//   }
+  
+//   // Generate random harmonics
+//   var thetaHarmonics = [];
+//   var phiHarmonics = [];
+  
+//   for (var h = 0; h < numThetaHarmonics; h++) {
+//     // Generate random parameters for theta variation
+//     var harmonicNum, amplitude, phase;
+    
+//     if (topology === 1) {
+//       // For closed curves, use integer harmonics for 2π periodicity
+//       harmonicNum = h + 1;  // 1, 2, 3...
+//       amplitude = thetaAmplitude * Math.pow(0.7, h); // Decreasing amplitude
+//       phase = seededRandom() * 2 * Math.PI;
+//     } else {
+//       // For pole-to-pole curves, avoid theta variations at poles
+//       harmonicNum = h * 2 + 1;  // 1, 3, 5... (odd harmonics)
+//       amplitude = thetaAmplitude * Math.pow(0.7, h); // Decreasing amplitude
+//       phase = seededRandom() * 2 * Math.PI;
+//     }
+    
+//     thetaHarmonics.push({
+//       number: harmonicNum,
+//       amplitude: amplitude,
+//       phase: phase
+//     });
+//   }
+  
+//   for (var h = 0; h < numPhiHarmonics; h++) {
+//     // Generate random parameters for phi variation
+//     var harmonicNum, amplitude, phase;
+    
+//     if (topology === 1) {
+//       // For closed curves, use harmonics that create 2π periodicity
+//       harmonicNum = h + 1;  // 1, 2, 3...
+//       amplitude = phiAmplitude * Math.pow(0.6, h); // Decreasing amplitude
+//       phase = seededRandom() * 2 * Math.PI;
+//     } else {
+//       // For pole-to-pole curves, use odd harmonics to preserve endpoints
+//       harmonicNum = h * 2 + 1;  // 1, 3, 5... (odd harmonics)
+//       amplitude = phiAmplitude * Math.pow(0.6, h) * 0.8; // Slightly lower amplitude
+//       phase = seededRandom() * 2 * Math.PI;
+//     }
+    
+//     phiHarmonics.push({
+//       number: harmonicNum,
+//       amplitude: amplitude,
+//       phase: phase
+//     });
+//   }
+  
+//   // Generate base curve based on topology
+//   if (topology === 1) {
+//     // CLOSED CURVE (topology = 1)
+    
+//     // Generate a random axis for the base circle orientation
+//     var axis = normalizeToSphere(
+//       seededRandom() * 2 - 1,
+//       seededRandom() * 2 - 1,
+//       seededRandom() * 2 - 1
+//     );
+    
+//     // Set up a basis for spherical coordinates
+//     // The "pole" of our spherical coordinates will be in this random direction
+//     // This gives us a random orientation for the base circle
+//     var phi0 = Math.acos(axis[2]);
+//     var theta0 = Math.atan2(axis[1], axis[0]);
+    
+//     // Generate points
+//     for (var i = 0; i <= N; i++) {
+//       // Arc length parameter s in [0,1]
+//       var s = i / N;
+      
+//       // Base angles (circular path)
+//       var theta = s * 2 * Math.PI;
+//       var phi = Math.PI / 2; // Equator
+      
+//       // Apply harmonic variations to theta (longitude)
+//       for (var h = 0; h < thetaHarmonics.length; h++) {
+//         var harmonic = thetaHarmonics[h];
+//         theta += harmonic.amplitude * Math.sin(harmonic.number * theta + harmonic.phase);
+//       }
+      
+//       // Apply harmonic variations to phi (latitude)
+//       for (var h = 0; h < phiHarmonics.length; h++) {
+//         var harmonic = phiHarmonics[h];
+//         phi += harmonic.amplitude * Math.sin(harmonic.number * theta + harmonic.phase);
+//       }
+      
+//       // Clamp phi to avoid numerical issues near poles
+//       phi = Math.max(0.01, Math.min(Math.PI - 0.01, phi));
+      
+//       // Convert to Cartesian coordinates
+//       var point = sphericalToCartesian(theta, phi);
+      
+//       // Rotate the resulting point to align with our random axis
+//       // (This is a simplified rotation that works well enough for our purposes)
+//       var rotatedPoint = [
+//         point[0] * Math.cos(theta0) - point[1] * Math.sin(theta0),
+//         point[0] * Math.sin(theta0) + point[1] * Math.cos(theta0),
+//         point[2]
+//       ];
+      
+//       // This is not a perfect rotation but gives good enough randomization
+//       // for the curve orientation
+      
+//       // Store the point
+//       [hx0[i], hy0[i], hz0[i]] = normalizeToSphere(...rotatedPoint);
+//     }
+    
+//     // Ensure exact closure
+//     hx0[N] = hx0[0];
+//     hy0[N] = hy0[0];
+//     hz0[N] = hz0[0];
+    
+//   } else if (topology === -1) {
+//     // POLE-TO-POLE CURVE (topology = -1)
+    
+//     // Generate random poles
+//     var pole1 = normalizeToSphere(
+//       seededRandom() * 2 - 1,
+//       seededRandom() * 2 - 1,
+//       seededRandom() * 2 - 1
+//     );
+//     var pole2 = [-pole1[0], -pole1[1], -pole1[2]]; // Exact opposite
+    
+//     // Set endpoints
+//     hx0[0] = pole1[0];
+//     hy0[0] = pole1[1];
+//     hz0[0] = pole1[2];
+    
+//     hx0[N] = pole2[0];
+//     hy0[N] = pole2[1];
+//     hz0[N] = pole2[2];
+    
+//     // Calculate the pole axis phi and theta
+//     var polePhi = Math.acos(pole1[2]);
+//     var poleTheta = Math.atan2(pole1[1], pole1[0]);
+    
+//     // Generate intermediate points
+//     for (var i = 1; i < N; i++) {
+//       // Arc length parameter s in [0,1]
+//       var s = i / N;
+      
+//       // Base phi varies from pole to pole (0 to π)
+//       var basePhi = s * Math.PI;
+      
+//       // Base theta is constant (great circle path)
+//       var baseTheta = poleTheta;
+      
+//       // For pole-to-pole curves, we need phi variations that preserve the endpoints
+//       // and theta variations that diminish at the poles
+      
+//       // Theta variations (diminish at poles using sin(phi) factor)
+//       var theta = baseTheta;
+//       var phiFactor = Math.sin(basePhi); // Zero at poles, maximum at equator
+      
+//       for (var h = 0; h < thetaHarmonics.length; h++) {
+//         var harmonic = thetaHarmonics[h];
+//         // Use sin(n*π*s) to ensure zero displacement at endpoints
+//         theta += harmonic.amplitude * 
+//                 Math.sin(harmonic.number * Math.PI * s) * 
+//                 Math.sin(harmonic.phase + 2 * Math.PI * s) * 
+//                 phiFactor; // Scale by phiFactor to diminish at poles
+//       }
+      
+//       // Phi variations (using odd harmonics to preserve endpoints)
+//       var phi = basePhi;
+      
+//       for (var h = 0; h < phiHarmonics.length; h++) {
+//         var harmonic = phiHarmonics[h];
+//         // Use sin(n*π*s) to ensure zero at endpoints (poles)
+//         phi += harmonic.amplitude * 
+//                Math.sin(harmonic.number * Math.PI * s) * 
+//                Math.sin(harmonic.phase + 2 * Math.PI * s);
+//       }
+      
+//       // Clamp phi to avoid numerical issues
+//       phi = Math.max(0.01, Math.min(Math.PI - 0.01, phi));
+      
+//       // Convert to Cartesian
+//       var point = sphericalToCartesian(theta, phi);
+      
+//       // Store the point
+//       [hx0[i], hy0[i], hz0[i]] = normalizeToSphere(...point);
+//     }
+//   } else {
+//     throw new Error("Topology must be either 1 (closed) or -1 (opposite poles)");
+//   }
+  
+//   // Apply smoothing passes while keeping points on sphere
+//   for (var pass = 0; pass < smoothingPasses; pass++) {
+//     var hx_temp = hx0.slice();
+//     var hy_temp = hy0.slice();
+//     var hz_temp = hz0.slice();
+    
+//     // Skip endpoints for pole-to-pole topology
+//     var startIdx = (topology === -1) ? 1 : 0;
+//     var endIdx = (topology === -1) ? N - 1 : N;
+    
+//     for (var i = startIdx; i <= endIdx; i++) {
+//       // For closed curve, wrap around
+//       var prevIdx = (i - 1 + N) % N;
+//       var nextIdx = (i + 1) % N;
+      
+//       // For pole-to-pole curve, don't wrap
+//       if (topology === -1) {
+//         prevIdx = Math.max(0, i - 1);
+//         nextIdx = Math.min(N, i + 1);
+//       }
+      
+//       // Weighted average of current point and neighbors
+//       var weight = smoothingStrength;
+//       var newX = hx_temp[i] * (1 - weight) + (hx_temp[prevIdx] + hx_temp[nextIdx]) * weight / 2;
+//       var newY = hy_temp[i] * (1 - weight) + (hy_temp[prevIdx] + hy_temp[nextIdx]) * weight / 2;
+//       var newZ = hz_temp[i] * (1 - weight) + (hz_temp[prevIdx] + hz_temp[nextIdx]) * weight / 2;
+      
+//       // Project back to sphere
+//       [hx0[i], hy0[i], hz0[i]] = normalizeToSphere(newX, newY, newZ);
+//     }
+    
+//     // For closed curve, ensure closure after smoothing
+//     if (topology === 1) {
+//       hx0[N] = hx0[0];
+//       hy0[N] = hy0[0];
+//       hz0[N] = hz0[0];
+//     }
+//   }
+  
+//   // Verify the topological constraints
+//   if (topology === 1) {
+//     // Check if first and last points are the same (closed curve)
+//     var isClosed = (
+//       Math.abs(hx0[0] - hx0[N]) < 1e-10 && 
+//       Math.abs(hy0[0] - hy0[N]) < 1e-10 && 
+//       Math.abs(hz0[0] - hz0[N]) < 1e-10
+//     );
+    
+//     console.log("Curve closure verification:", isClosed ? "Success" : "Failed");
+//   } else if (topology === -1) {
+//     // Check if first and last points are opposite (dot product should be -1)
+//     var dotProduct = hx0[0] * hx0[N] + hy0[0] * hy0[N] + hz0[0] * hz0[N];
+//     console.log("Opposite poles verification: Dot product =", dotProduct, "(should be close to -1)");
+//   }
+// }
+
+
+
 /**
- * Generates a random smooth curve on a unit sphere.
- * @param {number} N - Number of points in the curve
- * @param {number} topology - 1 for closed loop, -1 for curve between opposite poles
+ * Generates a smooth spherical curve with natural podal/antipodal properties
+ * based on the number of harmonics (n) and topology
+ * 
+ * @param {number} n - Number of harmonics (should be even for topology=1, odd for topology=-1)
+ * @param {number} N - Number of segments in the curve
+ * @param {number} topology - 1 for closed curve, -1 for antipodal endpoints
  */
-function generatrix(n,N, topology) {
+function generatrix(n, N, topology) {
   // Hyperparameters
-  var numThetaHarmonics = n;     // Number of harmonics for theta angle
-  var numPhiHarmonics = n;       // Number of harmonics for phi angle
-  var thetaAmplitude = 0.3;      // Base amplitude for theta variations
-  var phiAmplitude = 0.4;        // Base amplitude for phi variations
+  var thetaAmplitude = 0.01;      // Base amplitude for theta variations
+  var phiAmplitude = 0.02;        // Base amplitude for phi variations
   var smoothingPasses = 3;       // Number of smoothing iterations
   var smoothingStrength = 0.4;   // Strength of each smoothing pass (0-1)
   var seed = Math.random() * 10000; // Seed for pseudo-random generation
@@ -225,209 +510,121 @@ function generatrix(n,N, topology) {
     return seed / 233280;
   }
   
-  // Convert spherical coordinates to Cartesian coordinates
-  function sphericalToCartesian(theta, phi) {
-    var sinPhi = Math.sin(phi);
-    return [
-      sinPhi * Math.cos(theta),  // x
-      sinPhi * Math.sin(theta),  // y
-      Math.cos(phi)              // z
-    ];
-  }
-  
   // Function to normalize a point to the unit sphere
   function normalizeToSphere(x, y, z) {
     var length = Math.sqrt(x*x + y*y + z*z);
     return [x/length, y/length, z/length];
   }
   
-  // Generate random harmonics
+  // Ensure n is appropriate for the topology
+  if (topology === 1 && n % 2 !== 0) {
+    console.warn("For topology=1, n should be even. Incrementing to next even number.");
+    n = n + 1;
+  } else if (topology === -1 && n % 2 === 0) {
+    console.warn("For topology=-1, n should be odd. Incrementing to next odd number.");
+    n = n + 1;
+  }
+  
+  // Generate random phase shifts and variation factors
+  var phaseTheta1 = seededRandom() * 2 * Math.PI;
+  var phaseTheta2 = seededRandom() * 2 * Math.PI;
+  var phasePhi1 = seededRandom() * 2 * Math.PI;
+  var phasePhi2 = seededRandom() * 2 * Math.PI;
+  
+  var additionalHarmonics = Math.min(5, Math.floor(n/2)); // Number of additional harmonics
+  
+  // Random amplitudes and phases for additional harmonics
   var thetaHarmonics = [];
   var phiHarmonics = [];
   
-  for (var h = 0; h < numThetaHarmonics; h++) {
-    // Generate random parameters for theta variation
-    var harmonicNum, amplitude, phase;
+  for (var h = 0; h < additionalHarmonics; h++) {
+    var thetaHarmonic = {
+      order: 2 * h + 1, // Use odd multiples for more interesting variations
+      amplitude: thetaAmplitude * 0.4 * Math.pow(0.7, h), // Decreasing amplitude
+      phase: seededRandom() * 2 * Math.PI
+    };
     
-    if (topology === 1) {
-      // For closed curves, use integer harmonics for 2π periodicity
-      harmonicNum = h + 1;  // 1, 2, 3...
-      amplitude = thetaAmplitude * Math.pow(0.7, h); // Decreasing amplitude
-      phase = seededRandom() * 2 * Math.PI;
-    } else {
-      // For pole-to-pole curves, avoid theta variations at poles
-      harmonicNum = h * 2 + 1;  // 1, 3, 5... (odd harmonics)
-      amplitude = thetaAmplitude * Math.pow(0.7, h); // Decreasing amplitude
-      phase = seededRandom() * 2 * Math.PI;
-    }
+    var phiHarmonic = {
+      order: 2 * h + 1, // Use odd multiples
+      amplitude: phiAmplitude * 0.3 * Math.pow(0.7, h), // Decreasing amplitude
+      phase: seededRandom() * 2 * Math.PI
+    };
     
-    thetaHarmonics.push({
-      number: harmonicNum,
-      amplitude: amplitude,
-      phase: phase
-    });
+    thetaHarmonics.push(thetaHarmonic);
+    phiHarmonics.push(phiHarmonic);
   }
   
-  for (var h = 0; h < numPhiHarmonics; h++) {
-    // Generate random parameters for phi variation
-    var harmonicNum, amplitude, phase;
-    
-    if (topology === 1) {
-      // For closed curves, use harmonics that create 2π periodicity
-      harmonicNum = h + 1;  // 1, 2, 3...
-      amplitude = phiAmplitude * Math.pow(0.6, h); // Decreasing amplitude
-      phase = seededRandom() * 2 * Math.PI;
-    } else {
-      // For pole-to-pole curves, use odd harmonics to preserve endpoints
-      harmonicNum = h * 2 + 1;  // 1, 3, 5... (odd harmonics)
-      amplitude = phiAmplitude * Math.pow(0.6, h) * 0.8; // Slightly lower amplitude
-      phase = seededRandom() * 2 * Math.PI;
-    }
-    
-    phiHarmonics.push({
-      number: harmonicNum,
-      amplitude: amplitude,
-      phase: phase
-    });
+  // Create a random rotation matrix to orient the curve in a random direction
+  var rotationAxis = normalizeToSphere(
+    seededRandom() * 2 - 1,
+    seededRandom() * 2 - 1,
+    seededRandom() * 2 - 1
+  );
+  
+  var rotationAngle = seededRandom() * 2 * Math.PI;
+  var cosa = Math.cos(rotationAngle);
+  var sina = Math.sin(rotationAngle);
+  var omc = 1 - cosa;
+  
+  // Rotation matrix around arbitrary axis
+  var rotMatrix = [
+    [cosa + rotationAxis[0]*rotationAxis[0]*omc, 
+     rotationAxis[0]*rotationAxis[1]*omc - rotationAxis[2]*sina, 
+     rotationAxis[0]*rotationAxis[2]*omc + rotationAxis[1]*sina],
+    [rotationAxis[1]*rotationAxis[0]*omc + rotationAxis[2]*sina, 
+     cosa + rotationAxis[1]*rotationAxis[1]*omc, 
+     rotationAxis[1]*rotationAxis[2]*omc - rotationAxis[0]*sina],
+    [rotationAxis[2]*rotationAxis[0]*omc - rotationAxis[1]*sina, 
+     rotationAxis[2]*rotationAxis[1]*omc + rotationAxis[0]*sina, 
+     cosa + rotationAxis[2]*rotationAxis[2]*omc]
+  ];
+  
+  // Apply rotation to a point
+  function rotatePoint(x, y, z) {
+    return [
+      rotMatrix[0][0]*x + rotMatrix[0][1]*y + rotMatrix[0][2]*z,
+      rotMatrix[1][0]*x + rotMatrix[1][1]*y + rotMatrix[1][2]*z,
+      rotMatrix[2][0]*x + rotMatrix[2][1]*y + rotMatrix[2][2]*z
+    ];
   }
   
-  // Generate base curve based on topology
-  if (topology === 1) {
-    // CLOSED CURVE (topology = 1)
+  // Generate points
+  for (var i = 0; i <= N; i++) {
+    // Arc length parameter from 0 to π
+    var s = Math.PI * i / N;
     
-    // Generate a random axis for the base circle orientation
-    var axis = normalizeToSphere(
-      seededRandom() * 2 - 1,
-      seededRandom() * 2 - 1,
-      seededRandom() * 2 - 1
-    );
+    // Base theta and phi using n as the primary frequency
+    // Using n ensures we get the right topological behavior
+    var ph = n * s + Math.sin(n * s);
+    var th = Math.PI/2 - Math.sin(n * s);
     
-    // Set up a basis for spherical coordinates
-    // The "pole" of our spherical coordinates will be in this random direction
-    // This gives us a random orientation for the base circle
-    var phi0 = Math.acos(axis[2]);
-    var theta0 = Math.atan2(axis[1], axis[0]);
-    
-    // Generate points
-    for (var i = 0; i <= N; i++) {
-      // Arc length parameter s in [0,1]
-      var s = i / N;
-      
-      // Base angles (circular path)
-      var theta = s * 2 * Math.PI;
-      var phi = Math.PI / 2; // Equator
-      
-      // Apply harmonic variations to theta (longitude)
-      for (var h = 0; h < thetaHarmonics.length; h++) {
-        var harmonic = thetaHarmonics[h];
-        theta += harmonic.amplitude * Math.sin(harmonic.number * theta + harmonic.phase);
-      }
-      
-      // Apply harmonic variations to phi (latitude)
-      for (var h = 0; h < phiHarmonics.length; h++) {
-        var harmonic = phiHarmonics[h];
-        phi += harmonic.amplitude * Math.sin(harmonic.number * theta + harmonic.phase);
-      }
-      
-      // Clamp phi to avoid numerical issues near poles
-      phi = Math.max(0.01, Math.min(Math.PI - 0.01, phi));
-      
-      // Convert to Cartesian coordinates
-      var point = sphericalToCartesian(theta, phi);
-      
-      // Rotate the resulting point to align with our random axis
-      // (This is a simplified rotation that works well enough for our purposes)
-      var rotatedPoint = [
-        point[0] * Math.cos(theta0) - point[1] * Math.sin(theta0),
-        point[0] * Math.sin(theta0) + point[1] * Math.cos(theta0),
-        point[2]
-      ];
-      
-      // This is not a perfect rotation but gives good enough randomization
-      // for the curve orientation
-      
-      // Store the point
-      [hx0[i], hy0[i], hz0[i]] = normalizeToSphere(...rotatedPoint);
+    // Apply additional harmonic variations
+    for (var h = 0; h < thetaHarmonics.length; h++) {
+      var harmonic = thetaHarmonics[h];
+      // The sin(n*s) factor ensures the variation diminishes at the poles
+      th += harmonic.amplitude * Math.sin(harmonic.order * s) * 
+            Math.sin(harmonic.phase + n * s);
     }
     
-    // Ensure exact closure
-    hx0[N] = hx0[0];
-    hy0[N] = hy0[0];
-    hz0[N] = hz0[0];
-    
-  } else if (topology === -1) {
-    // POLE-TO-POLE CURVE (topology = -1)
-    
-    // Generate random poles
-    var pole1 = normalizeToSphere(
-      seededRandom() * 2 - 1,
-      seededRandom() * 2 - 1,
-      seededRandom() * 2 - 1
-    );
-    var pole2 = [-pole1[0], -pole1[1], -pole1[2]]; // Exact opposite
-    
-    // Set endpoints
-    hx0[0] = pole1[0];
-    hy0[0] = pole1[1];
-    hz0[0] = pole1[2];
-    
-    hx0[N] = pole2[0];
-    hy0[N] = pole2[1];
-    hz0[N] = pole2[2];
-    
-    // Calculate the pole axis phi and theta
-    var polePhi = Math.acos(pole1[2]);
-    var poleTheta = Math.atan2(pole1[1], pole1[0]);
-    
-    // Generate intermediate points
-    for (var i = 1; i < N; i++) {
-      // Arc length parameter s in [0,1]
-      var s = i / N;
-      
-      // Base phi varies from pole to pole (0 to π)
-      var basePhi = s * Math.PI;
-      
-      // Base theta is constant (great circle path)
-      var baseTheta = poleTheta;
-      
-      // For pole-to-pole curves, we need phi variations that preserve the endpoints
-      // and theta variations that diminish at the poles
-      
-      // Theta variations (diminish at poles using sin(phi) factor)
-      var theta = baseTheta;
-      var phiFactor = Math.sin(basePhi); // Zero at poles, maximum at equator
-      
-      for (var h = 0; h < thetaHarmonics.length; h++) {
-        var harmonic = thetaHarmonics[h];
-        // Use sin(n*π*s) to ensure zero displacement at endpoints
-        theta += harmonic.amplitude * 
-                Math.sin(harmonic.number * Math.PI * s) * 
-                Math.sin(harmonic.phase + 2 * Math.PI * s) * 
-                phiFactor; // Scale by phiFactor to diminish at poles
-      }
-      
-      // Phi variations (using odd harmonics to preserve endpoints)
-      var phi = basePhi;
-      
-      for (var h = 0; h < phiHarmonics.length; h++) {
-        var harmonic = phiHarmonics[h];
-        // Use sin(n*π*s) to ensure zero at endpoints (poles)
-        phi += harmonic.amplitude * 
-               Math.sin(harmonic.number * Math.PI * s) * 
-               Math.sin(harmonic.phase + 2 * Math.PI * s);
-      }
-      
-      // Clamp phi to avoid numerical issues
-      phi = Math.max(0.01, Math.min(Math.PI - 0.01, phi));
-      
-      // Convert to Cartesian
-      var point = sphericalToCartesian(theta, phi);
-      
-      // Store the point
-      [hx0[i], hy0[i], hz0[i]] = normalizeToSphere(...point);
+    for (var h = 0; h < phiHarmonics.length; h++) {
+      var harmonic = phiHarmonics[h];
+      ph += harmonic.amplitude * Math.sin(harmonic.order * s) * 
+            Math.sin(harmonic.phase + n * s);
     }
-  } else {
-    throw new Error("Topology must be either 1 (closed) or -1 (opposite poles)");
+    
+    // Ensure theta stays in reasonable bounds
+    th = Math.max(0.01, Math.min(Math.PI - 0.01, th));
+    
+    // Convert to Cartesian coordinates
+    var x = Math.sin(th) * Math.cos(ph);
+    var y = Math.sin(th) * Math.sin(ph);
+    var z = Math.cos(th);
+    
+    // Apply random rotation for global orientation
+    var rotated = rotatePoint(x, y, z);
+    
+    // Store the point
+    [hx0[i], hy0[i], hz0[i]] = normalizeToSphere(...rotated);
   }
   
   // Apply smoothing passes while keeping points on sphere
@@ -485,6 +682,7 @@ function generatrix(n,N, topology) {
     console.log("Opposite poles verification: Dot product =", dotProduct, "(should be close to -1)");
   }
 }
+
 
 
 //the function below generates animation data 
