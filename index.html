@@ -152,7 +152,11 @@
   <div class='rightbar'>
     <button class='button' id='buttFullScreen' title='enable full screen'> full screen </button>
     
-   
+    <br>
+    <!-- eversion path of the edge -->
+    <button class='button' id='buttShowEdge' title='path traced by a point on the edge
+    of the band  during the everting motion'> edge path </button>
+
     <button class='button' id='buttShowMid' title='path traced by a point on the midline
      of the band  during the everting motion'> eversion path </button>
     <button class='button' id='buttShowUnit' title='show 1/n th of the band with n half twists '> show unit </button>
@@ -282,8 +286,12 @@ setTimeout(() => {
 
       // quantitites for alpha slider 
       var NSlider;
-   
+      
+      var hl = 0.2;
+
+      console.log("value of hl is ", hl)
   
+      
 
 
        ebID('infoNumOf_n').innerHTML = "n = " + n.toString();
@@ -469,14 +477,23 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
         light.setDirectionToTarget(camera.position);
         // light.parent = camera;
 
+       
         var white = new BABYLON.StandardMaterial('texture1', scene);
         var cyan = new BABYLON.StandardMaterial('texture1', scene);
         var yellow = new BABYLON.StandardMaterial('texture1', scene);
+        var brightGreen = new BABYLON.StandardMaterial('texture1', scene);
+
+        var sweptEdgeColor =  new BABYLON.StandardMaterial('texture1', scene);
+        var sweptMidColor =  new BABYLON.StandardMaterial('texture1', scene);
+        
         var red = new BABYLON.StandardMaterial('texture1', scene);
+        var blue = new BABYLON.StandardMaterial('texture1', scene);
         var trans = new BABYLON.StandardMaterial('texture1', scene);
         white.diffuseColor = new BABYLON.Color3(1, 1, 1);
         cyan.diffuseColor = new BABYLON.Color3(0, 1, 1);
+        blue.diffuseColor = new BABYLON.Color3(0, 0, 1);
         yellow.diffuseColor = new BABYLON.Color3(1, 1, 0);
+        brightGreen.diffuseColor = new BABYLON.Color3(1, 0, .5);
         red.diffuseColor = new BABYLON.Color3(1, 0, 0);
         //cyan.wireframe = true;
         trans.alpha = 0.7;
@@ -484,6 +501,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
         var bandMat = new BABYLON.StandardMaterial('texture1', scene);
 
         bandMat.diffuseColor = new BABYLON.Color3(1, 1, 0);
+
  
 
 
@@ -617,6 +635,9 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
         };
         var t;
 
+
+        var golfEdge = [];
+
         function updateBandMesh(n,N,k, hingeLength,topology) {
           
          t = k_to_t(k)
@@ -645,7 +666,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
           var colors = [];
           var colorsBack = [];
           
-          var sign_band = topology;
+           
           for (var i = 1; i < N ; i++) {
             var v1 = [v[6 * i - 5], v[6 * i - 3], -v[6 * i - 4]];
             var v2 = [v[6 * i - 2], v[6 * i], -v[6 * i - 1]];
@@ -685,7 +706,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
 
             i = N;
 
-          var v1 = [v[6 * i - 5], v[6 * i - 3], -v[6 * i - 4]];
+            var v1 = [v[6 * i - 5], v[6 * i - 3], -v[6 * i - 4]];
             var v2 = [v[6 * i - 2], v[6 * i], -v[6 * i - 1]];
 
 
@@ -873,27 +894,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
 
 
           // creating rulings 
-
-          if(N<22){
-
-            for (var i = 1; i < N + 1; i++) {
-            // l =  i * ind1   ;
-            l = i;
-            var v1 = [v[6 * l - 5], v[6 * l - 3], -v[6 * l - 4]];
-            var v2 = [v[6 * l - 2], v[6 * l], -v[6 * l - 1]];
-            let path = [];
-            path.push(new BABYLON.Vector3(v1[0], v1[1], v1[2]));
-            path.push(new BABYLON.Vector3(v2[0], v2[1], v2[2]));
-
-            optionsRulings.path = path;
-            optionsRulings.instance = rulings[i];
-            rulings[i] = BABYLON.MeshBuilder.CreateTube("rulings", optionsRulings); //No scene parameter when using instance
-
-
-          };
-
-          }
-          else{
+ 
           for (var i = 1; i < n + 1; i++) {
             // l =  i * ind1   ;
             l = 2 * i * ind1 - 2 * ind1 + 1;
@@ -908,46 +909,135 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
             rulings[i] = BABYLON.MeshBuilder.CreateTube("rulings", optionsRulings); //No scene parameter when using instance
 
 
-          };}
+          }; 
+        
+           var ind1 = Math.round(N / (2 * n));
+            var j =1;
+             l =  2*ind1+1;;
+            var v1 = [v[6 * l - 5], v[6 * l - 3], -v[6 * l - 4]];
+            var v2 = [v[6 * l - 2], v[6 * l], -v[6 * l - 1]];
+           
+            if (golfEdge[j]) {
+              golfEdge[j].position = new BABYLON.Vector3( v1[0],v1[1],v1[2] );
+              golfEdge[j+1].position = new BABYLON.Vector3( v2[0],v2[1],v2[2] );   // golf ball on the other side
 
+            };
           // meshDispose(golf) 
+          
 
         };
+
+        var hingeLengthSlider = new Slider('hingeLengthSlider', 0, 50, hl * 100, '', 0, '%');
+        ebID('hingeLengthSlider').addEventListener('sliderChange', function () {
+          hl = hingeLengthSlider.getValue() / 100;
+
+          
+          if (showEdge) {
+            meshDispose(tubeEdge);
+            meshDispose(golfEdge);
+            createTube(tubeEdge, 2, hl, brightGreen, topology);
+          }
+
+          if (!play) updateBandMesh(n,N,k, hl, topology);
+
+          refresh = true;
+
+        });
+
 
 
 
 
         // tube paths /////////////////////////////////////////////////////////////////////
 
-        function createTube(tube, type, hingeLength, color,topology) {
+        function createTube(tube, type, hl, color,topology) {
            console.log('entering create tube')
-        
-          
-          var ind0 = Math.round(N / (2 * n));
+         
+           
+          var ind0 = Math.round(N / (2.0 * n));
+
+          if(type==1){
           for (var i = 1; i < n + 1; i++) {
             var ind = 2 * i * ind0 - 2 * ind0 + 1;
 
-            var curve = paths(n,N, hingeLength, type, ind, topology);
+            var curve = paths(n,N, hl, type, ind, topology);
 
-            console.log(curve)
+            
             tube[i] = BABYLON.Mesh.CreateTube('tube', curve, 0.0025, 8, null, null, scene);
             tube[i].material = color;
             golf[i] = BABYLON.MeshBuilder.CreateIcoSphere(
               'ico', { radius: 0.025, subdivisions: 8, flat: false, updatable: false }, scene);
             golf[i].material = red;
-            updateBandMesh(n,N,k, hl, topology);
+            
+           };};
 
+           if(type==2){
+
+
+            console.log('entered edge creation with n = ', n)
+            
+              var i = 1
+              var ind =   2*ind0+1; // 2 * (i+2) * ind0 -2 * ind0 + 1;
+
+            
+              var path = [];
+               
+              var v0  = [];
+              var v   = [];
+              console.log('entered edge creation with ind = ', ind)
+
+           for (var t = 1; t <N+1;  t++) {
+             //console.log(t)
+              v0  = fourierExpansion(n,N, t, hl,topology)[0];   // vertex at time stamp t
+              v[1] = v0[6 * ind - 5]; 
+              v[2] = v0[6 * ind - 4]; 
+              v[3] = v0[6 * ind - 3]; 
+              v[4] = v0[6 * ind - 2]; 
+              v[5] = v0[6 * ind - 1]; 
+              v[6] = v0[6 * ind  ];  
+
+               
+              path.splice(t-1, 0, new BABYLON.Vector3(v[1], v[3], -v[2]));
+              path.splice(N+t-1 , 0, new BABYLON.Vector3(v[4], v[6], -v[5]));
+            };
+           
+            t =1;
+            v0  = fourierExpansion(n,N, t,  hl,topology)[0];
+            
+            if(topology==-1){
+            v[1] = v0[6 * ind - 5]; 
+            v[2] = v0[6 * ind - 4]; 
+            v[3] = v0[6 * ind - 3]; 
           }
 
- 
-          // if (type == 2) { // midpoints get golf
-          //   for (var i = 1; i < n + 1; ++i) {
-          //     golf[i] = BABYLON.MeshBuilder.CreateIcoSphere(
-          //       'ico', { radius: 0.03, subdivisions: 8, flat: false, updatable: false }, scene);
-          //     golf[i].material = color;
-          //   }
-          // updateBandMesh(k, hl);
-          // }
+            else 
+            {
+              v[1] = v0[6 * ind - 2]; 
+            v[2] = v0[6 * ind - 1]; 
+            v[3] = v0[6 * ind - 0];
+            }
+           
+            path.push(new BABYLON.Vector3(v[1], v[3], -v[2]));
+            // creating path 
+            tube[i] = BABYLON.Mesh.CreateTube('tube', path, 0.005, 8, null, null, scene);
+            tube[i].material = color;
+            
+            // creating golf balls 
+            golfEdge[i] = BABYLON.MeshBuilder.CreateIcoSphere(
+              'ico', { radius: 0.04, subdivisions: 8, flat: false, updatable: false }, scene);
+            golfEdge[i].material = blue;
+
+            golfEdge[i+1] = BABYLON.MeshBuilder.CreateIcoSphere(
+              'ico', { radius: 0.04, subdivisions: 8, flat: false, updatable: false }, scene);
+            golfEdge[i+1].material = blue;
+
+         
+           
+        };
+
+        updateBandMesh(n,N,k, hl, topology);
+
+  
         }
 
 
@@ -1013,7 +1103,14 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
             console.log('entering show midlipath')
             meshDispose(tubeMid);
             meshDispose(golf);
-            createTube(tubeMid, 2, 0.5 * 3, yellow,topology);
+            createTube(tubeMid, 1, hl, yellow,topology);
+          }
+
+
+          if (showEdge) {
+            meshDispose(tubeEdge);
+            meshDispose(golfEdge);
+            createTube(tubeEdge, 2, hl, brightGreen, topology);
           }
 
           updateBandMesh(n,N,k, hl, topology);
@@ -1119,57 +1216,11 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
         });
 
 
-        var hingeLengthSlider = new Slider('hingeLengthSlider', 0, 50, hl * 100, '', 0, '%');
-        ebID('hingeLengthSlider').addEventListener('sliderChange', function () {
-          hl = hingeLengthSlider.getValue() / 100;
-          if (!play) updateBandMesh(n,N,k, hl, topology);
-
-          refresh = true;
-
-        });
+        
 
 
 
-
-
-
-        // change width/length ////////////////////////////////////////////////////////////
-
-
-        // ///  modifying sliders during the guiding tour 
-        // ebID('speedSlider').addEventListener('tourSpeed', function () {
-        //   speedSlider = new Slider('speedSlider', 4, 100, 40, '', 0, '%');
-        //   speedy = 40 / 2000 / n ** .2;
-        // });
-
-        // ebID('speedSlider').addEventListener('tourSpeedBack', function () {
-        //   speedSlider = new Slider('speedSlider', 4, 100, 20, '', 0, '%');
-        //   speedy = 20 / 2000 / n ** .2;
-        // });
-
-
-        // ebID('hingeLengthSlider').addEventListener('tourWidth', function () {
-        //   hl = 0.4;
-        //   hingeLengthSlider = new Slider('hingeLengthSlider', 0, 100, 40, 'width', 0, '%');
-
-        //   if (!play) updateBandMesh(k, hl);
-        //   // if (showCorn) {
-        //   //   meshDispose(tubeCorn);
-        //   //   createTube(tubeCorn,1,hl,white);
-        //   // }
-        //   refresh = true;
-        // })
-        // ebID('hingeLengthSlider').addEventListener('tourWidthBack', function () {
-        //   hl = 0.2;
-        //   hingeLengthSlider = new Slider('hingeLengthSlider', 0, 100, 20, 'width', 0, '%');
-
-        //   if (!play) updateBandMesh(k, hl);
-        //   // if (showCorn) {
-        //   //   meshDispose(tubeCorn);
-        //   //   createTube(tubeCorn,1,hl,white);
-        //   // }
-        //   refresh = true;
-        // })
+ 
 
         ////////////////////////////////////////////////////////////////
 
@@ -1264,7 +1315,7 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
         
         showMid = !showMid;
           buttonSwitchColor(ebID('buttShowMid'), showMid);
-          if (showMid) createTube(tubeMid, 1, 0.5 * 3, yellow,topology);
+          if (showMid) createTube(tubeMid, 1, hl, yellow,topology);
           else {
             meshDispose(tubeMid);
             meshDispose(golf);
@@ -1274,10 +1325,39 @@ ebID('buttNumOf_n_Plus').addEventListener('click', function () {
         ebID('buttShowMid').addEventListener('click', function () {
           showMid = !showMid;
           buttonSwitchColor(ebID('buttShowMid'), showMid);
-          if (showMid) createTube(tubeMid, 1, 0.5 * 3, yellow,topology);
+          if (showMid) createTube(tubeMid, 1, hl, yellow,topology);
           else {
             meshDispose(tubeMid);
             meshDispose(golf);
+          }
+          refresh = true;
+        });
+
+
+
+
+        var tubeEdge = [];
+        var showEdge = false;
+
+
+      // setting edge default on 
+      showEdge = !showEdge;
+          buttonSwitchColor(ebID('buttShowEdge'), showEdge);
+          if (showEdge) createTube(tubeEdge, 2, hl, brightGreen,topology);
+          else {
+            meshDispose(tubeEdge);
+            meshDispose(golfEdge);
+          }
+          refresh = true;
+
+
+        ebID('buttShowEdge').addEventListener('click', function () {
+          showEdge = !showEdge;
+          buttonSwitchColor(ebID('buttShowEdge'), showEdge);
+          if (showEdge) createTube(tubeEdge, 2, hl, brightGreen,topology);
+          else {
+            meshDispose(tubeEdge);
+            meshDispose(golfEdge);
           }
           refresh = true;
         });
